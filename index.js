@@ -1,4 +1,6 @@
 import { prompt } from 'inquirer'
+import async from 'async'
+import util from './util/util.js'
 
 const questions = [
     { 
@@ -8,18 +10,32 @@ const questions = [
     },
     {
         type : 'input',
-        name : 'transactions',
+        name : 'expense',
         message : 'Enter expense transactions file name:'
     },
-];
+]
 
 prompt(questions).then(answers => {
     console.log(answers)
-    
+    async.seq(
+        function(callback) {
+            util.loadFile(answers.name, 'name', data => {
+                util.parseName(data)
+                callback()
+            })
+        },
+        function(callback){
+            util.loadFile(answers.expense, 'expense', data => {
+                util.parseTransaction(data)
+                callback()
+            })
+        },
+    )(function(err) {
+        if(err) {
+            console.log(err)
+        }
+    })
 })
 
-const loadFile = function(fileName, type) {
-    console.log()
-}
 
-module.exports.loadFile = loadFile
+

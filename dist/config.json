@@ -1,5 +1,6 @@
 {
-    "filePath": "./inputs",
-    "unit": "$", 
-    "digit": "2"
+    "filePath": "./inputs/",
+    "nameIndex": "0", 
+    "amountIndex": "2",
+    "symbol": "$"
 }

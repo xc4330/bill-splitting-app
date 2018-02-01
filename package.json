@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/xc4330/bill-splitting-app#readme",
   "dependencies": {
+    "async": "^2.6.0",
     "inquirer": "^5.0.1"
   },
   "devDependencies": {
