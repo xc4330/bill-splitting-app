@@ -6,7 +6,7 @@ var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
 
-var _ledger = require('./model/ledger.js');
+var _ledger = require('./ledger.js');
 
 var _ledger2 = _interopRequireDefault(_ledger);
 
@@ -27,7 +27,6 @@ var questions = [{
 }];
 
 (0, _inquirer.prompt)(questions).then(function (answers) {
-    console.log(answers);
     processAnswers(answers);
 });
 
@@ -51,7 +50,6 @@ async function processAnswers(answers) {
 
     var ledger = new _ledger2.default(names);
     ledger.parseTransaction(transactions);
-    console.log(ledger.accountMap);
 }
 
 function loadFile(filename, type) {

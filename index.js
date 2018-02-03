@@ -40,7 +40,6 @@ async function processAnswers(answers){
 
     let ledger = new Ledger(names)
     ledger.parseTransaction(transactions)
-    console.log(ledger)
 
 } 
 
