@@ -1,6 +1,7 @@
 import { prompt } from 'inquirer'
-import async from 'async'
-import util from './util/util.js'
+import fs from 'fs'
+import Ledger from './ledger.js'
+import config from './config.json'
 
 const questions = [
     { 
@@ -16,26 +17,42 @@ const questions = [
 ]
 
 prompt(questions).then(answers => {
-    console.log(answers)
-    async.seq(
-        function(callback) {
-            util.loadFile(answers.name, 'name', data => {
-                util.parseName(data)
-                callback()
-            })
-        },
-        function(callback){
-            util.loadFile(answers.expense, 'expense', data => {
-                util.parseTransaction(data)
-                callback()
-            })
-        },
-    )(function(err) {
-        if(err) {
-            console.log(err)
-        }
-    })
+    processAnswers(answers)
 })
+
+async function processAnswers(answers){
+    let names = ''
+    let transactions = ''
+
+    try {
+        names = await loadFile(answers.name, 'name')
+    } catch (err) {
+        console.log('read name file failed')
+        console.log(err)
+    }
+
+    try {
+        transactions = await loadFile(answers.expense, 'expense')
+    } catch (err) {
+        console.log('read expense file failed')
+        console.log(err)
+    }
+
+    let ledger = new Ledger(names)
+    ledger.parseTransaction(transactions)
+    console.log(ledger)
+
+} 
+
+function loadFile(filename, type) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(config.filePath + filename, 'utf8', (err, lines) => {
+            if (err) reject(err)
+            console.log('OK: ' + filename)
+            resolve(lines)
+        })
+    })
+}
 
 
 
