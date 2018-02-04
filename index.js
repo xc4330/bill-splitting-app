@@ -26,8 +26,8 @@ function start() {
 
 async function processAnswers(answers){
     try {
-        let names = await loadFile(answers.name, 'name')
-        let transactions = await loadFile(answers.expense, 'expense')
+        let names = await loadFile(answers.name)
+        let transactions = await loadFile(answers.expense)
         let ledger = new Ledger()
         ledger.parseNames(names)
         ledger.parseTransactions(transactions)
@@ -38,7 +38,7 @@ async function processAnswers(answers){
     }
 } 
 
-function loadFile(filename, type) {
+export function loadFile(filename) {
     return new Promise((resolve, reject) => {
         if(filename === ''){
             reject(Error('File name cannot be empty'))

@@ -1,16 +1,10 @@
 import config from '../config.json'
 
-let instance = null
-
 export default class Ledger{  
     constructor(names) {
-        if(!instance){
-            instance = this
-        }
         this.amountMap = new Map() // init account records
         this.creditMap = new Map() // init credit records
         this.debitMap = new Map() // init debit records
-        return instance
     }
 
     parseNames(names){
@@ -29,7 +23,7 @@ export default class Ledger{
             if(record.length >= 2){ // transaction record should at least have 2 words: name and amount
                 let words = record.split(' ')
                 let name = words[config.nameIndex]
-                let amt = this.strToAmt(words[config.amountIndex])
+                let amt = this.extractAmt(record)
                 if(this.amountMap.has(name)){
                     let balance = this.amountMap.get(name)
                     this.amountMap.set(name, balance + amt)
@@ -46,8 +40,8 @@ export default class Ledger{
                 this.debitMap.set(name, avg-amt)
             }
         })
-
     }
+
 
     settle(){
         // return if there is no credit/debit record to settle
@@ -66,23 +60,28 @@ export default class Ledger{
         let receiver = creditMapArray[0][0]
         let remainder = debitMapArray[0][1] - creditMapArray[0][1]
         // compare largest credit and debit record
-        if(remainder >= 0){
+        if(remainder > 0){
             payment = creditMapArray[0][1]
             // remove credit record
             this.creditMap.delete(receiver)
             // udpate debit record
             this.debitMap.set(debitMapArray[0][0],remainder)
-        } else {
+        } else if (remainder < 0) {
             payment = debitMapArray[0][1]
             // remove debit record
             this.debitMap.delete(payer)
             // update credit record
             this.creditMap.set(creditMapArray[0][0],-remainder)
+        } else {
+            payment = debitMapArray[0][1]
+            // remove both
+            this.debitMap.delete(payer)
+            this.creditMap.delete(creditMapArray[0][0])
         }
         
         console.log(payer + ' pays ' + receiver + ' ' + this.amtToStr(payment))
 
-        this.settle()
+        this.settle(this.creditMap, this.debitMap)
     }
 
     sortKvPair(pair1,pair2){
@@ -93,12 +92,27 @@ export default class Ledger{
         }
     }
 
+    extractAmt(record) {
+        let words = record.split(' ')
+        // find word that contains transaction amount
+        if(record.indexOf(config.currency) === -1){
+            throw Error('Cannot find transacion amount in the record. Please make sure records are in correct format.')
+        }
+        let index = -1
+        for(let i=0; i<words.length; i++){
+            if(words[i].indexOf(config.currency) !== -1){
+                index = i // find first occurence of transaction amount
+                break
+            }
+        }
+        return this.strToAmt(words[index])
+    }
+
     strToAmt(amtStr) {
-        if (amtStr === undefined) throw Error('Cannot process transaction amount. Please make sure records are in correct format.')
         let amt = parseFloat(
             amtStr.substring(amtStr.indexOf(config.currency) + 1)
         )
-        if(isNaN(amt)) throw Error('Cannot process transaction amount. Please make sure records are in correct format.')
+        if(isNaN(amt)) throw Error('Invalid transaction amount. Please make sure the amount is a valid number')
         return amt
     }
 

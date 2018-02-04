@@ -1,5 +1,10 @@
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.loadFile = loadFile;
+
 var _inquirer = require('inquirer');
 
 var _fs = require('fs');
@@ -36,8 +41,8 @@ function start() {
 
 async function processAnswers(answers) {
     try {
-        var names = await loadFile(answers.name, 'name');
-        var transactions = await loadFile(answers.expense, 'expense');
+        var names = await loadFile(answers.name);
+        var transactions = await loadFile(answers.expense);
         var ledger = new _ledger2.default();
         ledger.parseNames(names);
         ledger.parseTransactions(transactions);
@@ -48,7 +53,7 @@ async function processAnswers(answers) {
     }
 }
 
-function loadFile(filename, type) {
+function loadFile(filename) {
     return new Promise(function (resolve, reject) {
         if (filename === '') {
             reject(Error('File name cannot be empty'));

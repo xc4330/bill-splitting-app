@@ -6,24 +6,13 @@
   "scripts": {
     "build": "rimraf dist/ && babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
     "start": "npm run build && node dist/index.js",
-    "test": "npm run build && cd dist && jest"
+    "test": "npm run build && cd dist && jest --coverage"
   },
   "jest": {
     "testMatch": ["**/dist/test/**/*.js"]
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/xc4330/bill-splitting-app.git"
-  },
-  "keywords": [
-    "bill-splitting"
-  ],
   "author": "Eric",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/xc4330/bill-splitting-app/issues"
-  },
-  "homepage": "https://github.com/xc4330/bill-splitting-app#readme",
   "dependencies": {
     "inquirer": "^5.0.1"
   },
