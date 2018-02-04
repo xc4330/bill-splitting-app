@@ -23,41 +23,53 @@ var Ledger = function () {
         if (!instance) {
             instance = this;
         }
-        var nameArray = names.split('\n');
-        var amountMap = new Map();
-        nameArray.forEach(function (name) {
-            amountMap.set(name, 0);
-        });
-        this.amountMap = amountMap;
-        this.creditMap = new Map(); // init empty credit records
-        this.debitMap = new Map(); // init empty debit records
+        this.amountMap = new Map(); // init account records
+        this.creditMap = new Map(); // init credit records
+        this.debitMap = new Map(); // init debit records
         return instance;
     }
 
     _createClass(Ledger, [{
-        key: 'parseTransaction',
-        value: function parseTransaction(transactions) {
+        key: 'parseNames',
+        value: function parseNames(names) {
             var _this = this;
+
+            names.split('\n').forEach(function (name) {
+                name = name.trim().replace(/\s+/g, ' '); // remove extra spaces
+                if (name.length > 0) {
+                    _this.amountMap.set(name, 0);
+                } else throw Error('Invalid name format. Please make sure records are in correct format.');
+            });
+        }
+    }, {
+        key: 'parseTransactions',
+        value: function parseTransactions(transactions) {
+            var _this2 = this;
 
             var total = 0;
             transactions.split('\n').forEach(function (record) {
-                var words = record.split(' ');
-                var name = words[_config2.default.nameIndex];
-                var amt = _this.parseAmt(words[_config2.default.amountIndex]);
-                var balance = _this.amountMap.get(name);
-                _this.amountMap.set(name, balance + amt);
-                total += amt;
+                record = record.trim().replace(/\s+/g, ' '); // remove extra spaces
+                if (record.length >= 2) {
+                    // transaction record should at least have 2 words: name and amount
+                    var words = record.split(' ');
+                    var name = words[_config2.default.nameIndex];
+                    var amt = _this2.strToAmt(words[_config2.default.amountIndex]);
+                    if (_this2.amountMap.has(name)) {
+                        var balance = _this2.amountMap.get(name);
+                        _this2.amountMap.set(name, balance + amt);
+                        total += amt;
+                    } else throw Error('Unknown name found in transaction records. Please make sure all names are added in the name file.');
+                } else throw Error('Invalid transaction record format. Please make sure records are in correct format.');
             });
 
             var avg = total / this.amountMap.size;
             this.amountMap.forEach(function (amt, name) {
                 if (amt > avg) {
-                    _this.creditMap.set(name, amt - avg);
+                    _this2.creditMap.set(name, amt - avg);
                 } else if (amt < avg) {
-                    _this.debitMap.set(name, avg - amt);
+                    _this2.debitMap.set(name, avg - amt);
                 }
             });
-            this.settle();
         }
     }, {
         key: 'settle',
@@ -67,6 +79,7 @@ var Ledger = function () {
                 return;
             }
 
+            // sort debit and credit record based on amount from large to small
             var creditMapArray = Array.from(this.creditMap).sort(this.sortKvPair);
             var debitMapArray = Array.from(this.debitMap).sort(this.sortKvPair);
             this.creditMap = new Map(creditMapArray);
@@ -88,10 +101,10 @@ var Ledger = function () {
                 // remove debit record
                 this.debitMap.delete(payer);
                 // update credit record
-                this.creditMap.set(creditMapArray[0][0], remainder);
+                this.creditMap.set(creditMapArray[0][0], -remainder);
             }
 
-            console.log(payer + ' pays ' + receiver + ' ' + payment.toFixed(2));
+            console.log(payer + ' pays ' + receiver + ' ' + this.amtToStr(payment));
 
             this.settle();
         }
@@ -105,9 +118,17 @@ var Ledger = function () {
             }
         }
     }, {
-        key: 'parseAmt',
-        value: function parseAmt(amtStr) {
-            return parseFloat(amtStr.substring(amtStr.indexOf(_config2.default.symbol) + 1));
+        key: 'strToAmt',
+        value: function strToAmt(amtStr) {
+            if (amtStr === undefined) throw Error('Cannot process transaction amount. Please make sure records are in correct format.');
+            var amt = parseFloat(amtStr.substring(amtStr.indexOf(_config2.default.currency) + 1));
+            if (isNaN(amt)) throw Error('Cannot process transaction amount. Please make sure records are in correct format.');
+            return amt;
+        }
+    }, {
+        key: 'amtToStr',
+        value: function amtToStr(amt) {
+            return _config2.default.currency + amt.toFixed(_config2.default.precision);
         }
     }]);
 

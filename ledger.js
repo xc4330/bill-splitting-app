@@ -7,28 +7,37 @@ export default class Ledger{
         if(!instance){
             instance = this
         }
-        let nameArray = names.split('\n')
-        let amountMap = new Map()
-        nameArray.forEach( name => {
-            amountMap.set(name,0)
-        })
-        this.amountMap = amountMap
-        this.creditMap = new Map() // init empty credit records
-        this.debitMap = new Map() // init empty debit records
+        this.amountMap = new Map() // init account records
+        this.creditMap = new Map() // init credit records
+        this.debitMap = new Map() // init debit records
         return instance
     }
 
-    parseTransaction(transactions){
+    parseNames(names){
+        names.split('\n').forEach( name => {
+            name = name.trim().replace(/\s+/g, ' ') // remove extra spaces
+            if(name.length > 0){
+                this.amountMap.set(name,0)
+            } else throw Error('Invalid name format. Please make sure records are in correct format.')
+        })
+    }
+
+    parseTransactions(transactions){
         let total = 0
         transactions.split('\n').forEach(record => {
-            let words = record.split(' ')
-            let name = words[config.nameIndex]
-            let amt = this.parseAmt(words[config.amountIndex])
-            let balance = this.amountMap.get(name)
-            this.amountMap.set(name, balance + amt)
-            total += amt
+            record = record.trim().replace(/\s+/g, ' ') // remove extra spaces
+            if(record.length >= 2){ // transaction record should at least have 2 words: name and amount
+                let words = record.split(' ')
+                let name = words[config.nameIndex]
+                let amt = this.strToAmt(words[config.amountIndex])
+                if(this.amountMap.has(name)){
+                    let balance = this.amountMap.get(name)
+                    this.amountMap.set(name, balance + amt)
+                    total += amt
+                } else throw Error('Unknown name found in transaction records. Please make sure all names are added in the name file.')
+            } else throw Error('Invalid transaction record format. Please make sure records are in correct format.')
         })
-
+    
         let avg = total/this.amountMap.size
         this.amountMap.forEach( (amt, name) => {
             if(amt > avg){
@@ -37,7 +46,7 @@ export default class Ledger{
                 this.debitMap.set(name, avg-amt)
             }
         })
-        this.settle()
+
     }
 
     settle(){
@@ -45,7 +54,8 @@ export default class Ledger{
         if(this.creditMap.size === 0 || this.debitMap.size === 0){
             return
         }
-
+        
+        // sort debit and credit record based on amount from large to small
         let creditMapArray = Array.from(this.creditMap).sort(this.sortKvPair)
         let debitMapArray = Array.from(this.debitMap).sort(this.sortKvPair)
         this.creditMap = new Map(creditMapArray)
@@ -67,10 +77,10 @@ export default class Ledger{
             // remove debit record
             this.debitMap.delete(payer)
             // update credit record
-            this.creditMap.set(creditMapArray[0][0],remainder)
+            this.creditMap.set(creditMapArray[0][0],-remainder)
         }
         
-        console.log(payer + ' pays ' + receiver + ' ' + payment.toFixed(2))
+        console.log(payer + ' pays ' + receiver + ' ' + this.amtToStr(payment))
 
         this.settle()
     }
@@ -83,8 +93,16 @@ export default class Ledger{
         }
     }
 
-    parseAmt(amtStr) {
-        return parseFloat(amtStr.substring(amtStr.indexOf(config.symbol) + 1))
+    strToAmt(amtStr) {
+        if (amtStr === undefined) throw Error('Cannot process transaction amount. Please make sure records are in correct format.')
+        let amt = parseFloat(
+            amtStr.substring(amtStr.indexOf(config.currency) + 1)
+        )
+        if(isNaN(amt)) throw Error('Cannot process transaction amount. Please make sure records are in correct format.')
+        return amt
     }
 
+    amtToStr(amt) {
+        return config.currency + amt.toFixed(config.precision)
+    }
 } 

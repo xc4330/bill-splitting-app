@@ -16,38 +16,35 @@ const questions = [
     },
 ]
 
-prompt(questions).then(answers => {
-    processAnswers(answers)
-})
+start()
+
+function start() {
+    prompt(questions).then(answers => {
+        processAnswers(answers)
+    })
+}
 
 async function processAnswers(answers){
-    let names = ''
-    let transactions = ''
-
     try {
-        names = await loadFile(answers.name, 'name')
+        let names = await loadFile(answers.name, 'name')
+        let transactions = await loadFile(answers.expense, 'expense')
+        let ledger = new Ledger()
+        ledger.parseNames(names)
+        ledger.parseTransactions(transactions)
+        ledger.settle()
     } catch (err) {
-        console.log('read name file failed')
-        console.log(err)
+        console.log(err.message)
+        start()
     }
-
-    try {
-        transactions = await loadFile(answers.expense, 'expense')
-    } catch (err) {
-        console.log('read expense file failed')
-        console.log(err)
-    }
-
-    let ledger = new Ledger(names)
-    ledger.parseTransaction(transactions)
-
 } 
 
 function loadFile(filename, type) {
     return new Promise((resolve, reject) => {
+        if(filename === ''){
+            reject(Error('File name cannot be empty'))
+        }
         fs.readFile(config.filePath + filename, 'utf8', (err, lines) => {
             if (err) reject(err)
-            console.log('OK: ' + filename)
             resolve(lines)
         })
     })

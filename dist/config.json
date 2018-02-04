@@ -2,6 +2,6 @@
     "filePath": "./inputs/",
     "nameIndex": "0", 
     "amountIndex": "2",
-    "symbol": "$",
-    "presion": "2"
+    "currency": "$",
+    "precision": "2"
 }

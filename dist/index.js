@@ -26,37 +26,35 @@ var questions = [{
     message: 'Enter expense transactions file name:'
 }];
 
-(0, _inquirer.prompt)(questions).then(function (answers) {
-    processAnswers(answers);
-});
+start();
+
+function start() {
+    (0, _inquirer.prompt)(questions).then(function (answers) {
+        processAnswers(answers);
+    });
+}
 
 async function processAnswers(answers) {
-    var names = '';
-    var transactions = '';
-
     try {
-        names = await loadFile(answers.name, 'name');
+        var names = await loadFile(answers.name, 'name');
+        var transactions = await loadFile(answers.expense, 'expense');
+        var ledger = new _ledger2.default();
+        ledger.parseNames(names);
+        ledger.parseTransactions(transactions);
+        ledger.settle();
     } catch (err) {
-        console.log('read name file failed');
-        console.log(err);
+        console.log(err.message);
+        start();
     }
-
-    try {
-        transactions = await loadFile(answers.expense, 'expense');
-    } catch (err) {
-        console.log('read expense file failed');
-        console.log(err);
-    }
-
-    var ledger = new _ledger2.default(names);
-    ledger.parseTransaction(transactions);
 }
 
 function loadFile(filename, type) {
     return new Promise(function (resolve, reject) {
+        if (filename === '') {
+            reject(Error('File name cannot be empty'));
+        }
         _fs2.default.readFile(_config2.default.filePath + filename, 'utf8', function (err, lines) {
             if (err) reject(err);
-            console.log('OK: ' + filename);
             resolve(lines);
         });
     });

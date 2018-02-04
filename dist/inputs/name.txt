@@ -1,4 +1,7 @@
 Alice
 Bob
 Claire
+Claire
+Eric 
+Esther
 David
