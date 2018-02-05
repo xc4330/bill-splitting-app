@@ -16,6 +16,15 @@ describe('ledger.js', function () {
         testLedger.debitMap = new Map();
     });
 
+    describe('constructor', function () {
+        test('should construct Ledger object that contains 3 mappings', function () {
+            var ledger = new _ledger2.default();
+            expect(ledger.amountMap).toEqual(new Map());
+            expect(ledger.creditMap).toEqual(new Map());
+            expect(ledger.debitMap).toEqual(new Map());
+        });
+    });
+
     describe('parseNames', function () {
         test('should create mappings from name to amount', function () {
             var testNames = 'a\n b\n c  ';

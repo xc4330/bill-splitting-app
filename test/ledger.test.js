@@ -10,6 +10,15 @@ describe('ledger.js', () => {
         testLedger.debitMap = new Map()
     })
 
+    describe('constructor', () => {
+        test('should construct Ledger object that contains 3 mappings', () => {
+            let ledger = new Ledger()
+            expect(ledger.amountMap).toEqual(new Map())
+            expect(ledger.creditMap).toEqual(new Map())
+            expect(ledger.debitMap).toEqual(new Map())
+        })
+    })
+
     describe('parseNames', () => {
         test('should create mappings from name to amount', () => {
             let testNames = 'a\n b\n c  '

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.loadFile = loadFile;
+exports.InputHandler = undefined;
 
 var _inquirer = require('inquirer');
 
@@ -31,36 +31,40 @@ var questions = [{
     message: 'Enter expense transactions file name:'
 }];
 
-start();
+var InputHandler = exports.InputHandler = {
+    start: function start() {
+        var _this = this;
 
-function start() {
-    (0, _inquirer.prompt)(questions).then(function (answers) {
-        processAnswers(answers);
-    });
-}
-
-async function processAnswers(answers) {
-    try {
-        var names = await loadFile(answers.name);
-        var transactions = await loadFile(answers.expense);
-        var ledger = new _ledger2.default();
-        ledger.parseNames(names);
-        ledger.parseTransactions(transactions);
-        ledger.settle();
-    } catch (err) {
-        console.log(err.message);
-        start();
-    }
-}
-
-function loadFile(filename) {
-    return new Promise(function (resolve, reject) {
-        if (filename === '') {
-            reject(Error('File name cannot be empty'));
-        }
-        _fs2.default.readFile(_config2.default.filePath + filename, 'utf8', function (err, lines) {
-            if (err) reject(err);
-            resolve(lines);
+        (0, _inquirer.prompt)(questions).then(function (answers) {
+            _this.processAnswers(answers);
         });
-    });
-}
+    },
+    processAnswers: function processAnswers(answers) {
+        var _this2 = this;
+
+        var ledger = new _ledger2.default();
+        return this.loadFile(answers.name).then(function (names) {
+            ledger.parseNames(names);
+            return _this2.loadFile(answers.expense);
+        }).then(function (transactions) {
+            ledger.parseTransactions(transactions);
+            ledger.settle();
+        }).catch(function (err) {
+            console.log(err.message);
+            _this2.start();
+        });
+    },
+    loadFile: function loadFile(filename) {
+        return new Promise(function (resolve, reject) {
+            if (filename === '') {
+                reject(Error('File name cannot be empty'));
+            }
+            _fs2.default.readFile(_config2.default.filePath + filename, 'utf8', function (err, lines) {
+                if (err) reject(err);
+                resolve(lines);
+            });
+        });
+    }
+};
+
+InputHandler.start();

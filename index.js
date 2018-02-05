@@ -16,39 +16,36 @@ const questions = [
     },
 ]
 
-start()
-
-function start() {
-    prompt(questions).then(answers => {
-        processAnswers(answers)
-    })
-}
-
-async function processAnswers(answers){
-    try {
-        let names = await loadFile(answers.name)
-        let transactions = await loadFile(answers.expense)
-        let ledger = new Ledger()
-        ledger.parseNames(names)
-        ledger.parseTransactions(transactions)
-        ledger.settle()
-    } catch (err) {
-        console.log(err.message)
-        start()
-    }
-} 
-
-export function loadFile(filename) {
-    return new Promise((resolve, reject) => {
-        if(filename === ''){
-            reject(Error('File name cannot be empty'))
-        }
-        fs.readFile(config.filePath + filename, 'utf8', (err, lines) => {
-            if (err) reject(err)
-            resolve(lines)
+export const InputHandler = {
+    start() {
+        prompt(questions).then(answers => {
+            this.processAnswers(answers)
         })
-    })
+    },
+    processAnswers(answers){
+        let ledger = new Ledger()
+        return this.loadFile(answers.name).then((names) => {
+            ledger.parseNames(names)
+            return this.loadFile(answers.expense)
+        }).then((transactions) => {
+            ledger.parseTransactions(transactions)
+            ledger.settle()
+        }).catch((err) => {
+            console.log(err.message)
+            this.start()
+        })
+    }, 
+    loadFile(filename) {
+        return new Promise((resolve, reject) => {
+            if(filename === ''){
+                reject(Error('File name cannot be empty'))
+            }
+            fs.readFile(config.filePath + filename, 'utf8', (err, lines) => {
+                if (err) reject(err)
+                resolve(lines)
+            })
+        })
+    }
 }
 
-
-
+InputHandler.start()
