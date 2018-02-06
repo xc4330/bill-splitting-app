@@ -4,12 +4,25 @@ import App from '../app.js'
 import Ledger from '../ledger.js'
 
 async function createTestFiles(){
-    fs.writeFile("./inputs/testName.txt", "test", function(err) {
+    fs.writeFile("./inputs/testName.txt", "test1\ntest2", function(err) {
         if(err) {
             return console.log(err)
         }
     })
-    fs.writeFile("./inputs/testExpense.txt", "test $5", function(err) {
+    fs.writeFile("./inputs/testExpense.txt", "test1 paid $5", function(err) {
+        if(err) {
+            return console.log(err)
+        }
+    })
+}
+
+async function deleteTestFiles(){
+    fs.unlink("./inputs/testName.txt", function(err) {
+        if(err) {
+            return console.log(err)
+        }
+    })
+    fs.unlink("./inputs/testExpense.txt", function(err) {
         if(err) {
             return console.log(err)
         }
@@ -18,10 +31,13 @@ async function createTestFiles(){
  
 describe('app', () => {
     let app = new App()
-    beforeAll( async (cb) => {
+    beforeAll( async () => {
         await createTestFiles()
-        cb()
     })
+
+    afterAll( async () => {
+        await deleteTestFiles()
+    } )
 
     describe('constructor', () => {
         test('should construct App object that contains 1 ledger', () => {
@@ -34,7 +50,7 @@ describe('app', () => {
         test('should return string from a text file', async () => {
             expect.assertions(1) // number of async functions to be called
             const data = await app.loadFile('testName.txt')
-            expect(data).toEqual('test')
+            expect(data).toEqual('test1\ntest2')
         })
         test('should throw \'File name cannot be empty\' if file name is empty', async () => {
             expect.assertions(1)
